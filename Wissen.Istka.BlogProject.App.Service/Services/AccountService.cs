@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,34 @@ namespace Wissen.Istka.BlogProject.App.Service.Services
             _roleManager = roleManager;
             _signInManager = signInManager;
             _mapper = mapper;
+        }
+        public async Task<List<RoleViewModel>> GetAllRoles()
+        {
+            var roles = await _roleManager.Roles.ToListAsync();
+            return _mapper.Map<List<RoleViewModel>>(roles);
+        }
+        public async Task<string> CreateRoleAsync(RoleViewModel model)
+        {
+            string message = string.Empty;
+            AppRole role = new AppRole()
+            {
+                Name = model.Name,
+                Description = model.Description
+            };
+            var identityResult = await _roleManager.CreateAsync(role);
+
+            if (identityResult.Succeeded)
+            {
+                message = "OK";
+            }
+            else
+            {
+                foreach (var error in identityResult.Errors)
+                {
+                    message = error.Description;
+                }
+            }
+            return message;
         }
 
         public async Task<string> CreateUserAsync(RegisterViewModel model)
@@ -74,6 +103,11 @@ namespace Wissen.Istka.BlogProject.App.Service.Services
                 message = "OK";
             }
             return message;
+        }
+
+        public async Task SignOutAsync()
+        {
+            await _signInManager.SignOutAsync();
         }
     }
 }
